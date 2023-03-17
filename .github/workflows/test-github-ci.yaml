@@ -10,7 +10,7 @@ env:
   TARGET_REGION: us-east-1
   AWS_CT_DEV_ACCOUNT: '928700945928'
   # AWS_CT_PROD_ACCOUNT: '1111111111'
-  GITHUB_PIPELINE_ROLE: git-pipeline-role
+  GITHUB_PIPELINE_ROLE: github-cfct-pipeline-role
   CFCT_CUSTOMIZATIONS_PATH: codes/cfct-modules
 
 permissions:
