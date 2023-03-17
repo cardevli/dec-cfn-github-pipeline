@@ -248,7 +248,7 @@ Resources:
                 - !Ref rGitHubOIDC
                 - !Ref pOIDCProviderArn
             Condition:
-              StringEquals: 
+              StringEquals:
                 token.actions.githubusercontent.com:aud: !Ref pOIDCAudience
               StringLike: 
                 token.actions.githubusercontent.com:sub: !Sub "repo:${pGitHubOrg}/${pGitHubRepoName}:*"
@@ -271,6 +271,9 @@ Resources:
                 - kms:GenerateDataKey
                 - kms:Encrypt
               Resource: "*" # Wildcard allows IAM User to use any KMS key selected for S3 encryption
+            - Effect: Allow
+              Action: sts:AssumeRoleWithWebIdentity
+              Resource: "arn:aws:iam::928700945928:role/*"
       Tags: # conditionally apply tags to resources based on user-defined tag keys 
         - !If [ cCreateTag1, {Key: !Ref pUserDefinedTagKey1, Value: !Ref pUserDefinedTagValue1}, !Ref AWS::NoValue ]
         - !If [ cCreateTag2, {Key: !Ref pUserDefinedTagKey2, Value: !Ref pUserDefinedTagValue2}, !Ref AWS::NoValue ]
