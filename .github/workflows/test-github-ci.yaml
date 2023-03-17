@@ -29,9 +29,8 @@ jobs:
   create_zip: 
     runs-on: ubuntu-latest
     steps:
-    - name: Create cfct configuration zip file
-      uses: actions/checkout@v3
-      run: |
+    - uses: actions/checkout@v3
+    - run: |
         cd $CFCT_CUSTOMIZATIONS_PATH
         zip -r custom-control-tower-configuration.zip *
     - name: Create cfct configuration artifact
