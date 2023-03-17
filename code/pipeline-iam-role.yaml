@@ -250,6 +250,7 @@ Resources:
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:aud: !Ref pOIDCAudience
+                token.actions.githubusercontent.com:iss: "https://token.actions.githubusercontent.com"
               StringLike: 
                 token.actions.githubusercontent.com:sub: !Sub "repo:${pGitHubOrg}/${pGitHubRepoName}:*"
       Policies:
