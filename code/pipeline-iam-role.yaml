@@ -111,7 +111,7 @@ Parameters:
     Description: ARN for the GitHub OIDC Provider
     # AllowedPattern: "^arn:aws:iam:[a-z]{2}-[a-z]+-\\d{1}:\\d{12}:oidc-provider\\/[a-zA-Z0-9/+=._-]+$|^$"
     # ConstraintDescription: The OIDC Provider ARN must be unique within the account and must be alphanumeric, including the following specific special characters +=,.@_-
-    Default: "arn:aws:iam::928700945928:oidc-provider/token.actions.githubusercontent.com/"
+    Default: "arn:aws:iam::928700945928:oidc-provider/token.actions.githubusercontent.com"
   
   # Parameter for the name of the audience supplied to configure-aws-credentials
   pOIDCAudience:
