@@ -95,7 +95,7 @@ Parameters:
     Description: Name of the GitHub Organization
     AllowedPattern: "^[0-9a-z+=,.@_-]{0,128}$"
     ConstraintDescription: Name of GitHub Organization must be unique within the account and must be alphanumeric, including the following specific special characters +=,.@_-
-    Default: ""
+    Default: "cardevli"
 
   # Parameter for the name of the GitHub repository
   pGitHubRepoName:
