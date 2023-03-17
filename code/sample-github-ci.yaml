@@ -1,0 +1,81 @@
+name: Deploy CfCT via GitHub Pipeline
+
+on: 
+  push:
+    branches:
+      - development
+      - production
+  
+env: 
+  TARGET_REGION: us-east-1
+  AWS_CT_DEV_ACCOUNT: '1111111111'
+  AWS_CT_PROD_ACCOUNT: '1111111111'
+  GITHUB_PIPELINE_ROLE: github-cfct-pipeline-role
+  CFCT_CUSTOMIZATIONS_PATH: codes/cfct-modules
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  validate:
+    runs_on: ubuntu_latest
+    steps:
+      - name: Validate code with cfn-nag
+        uses: stelligent/cfn_nag@master
+        with:
+          input_path: $CFCT_CUSTOMIZATIONS_PATH/*     
+
+  create_zip: 
+    runs_on: ubuntu_latest
+    steps:
+      - name: Create CfCT configuration zip
+        uses: actions/checkout@v3
+        run: |
+          cd $CFCT_CUSTOMIZATIONS_PATH
+          zip -r custom-control-tower-configuration.zip *
+      - name: Create cfct configuration artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: custom-control-tower-configuration.zip
+          path: $CFCT_CUSTOMIZATIONS_PATH/custom-control-tower-configuration.zip
+
+  upload_to_dev_s3:
+    needs: create_zip
+    runs_on: ubuntu_latest
+    if: github.ref_name == 'development'
+    steps:
+      - name: Git clone the repository
+        uses: actions/checkout@v3
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::$AWS_CT_DEV_ACCOUNT:role/$GITHUB_PIPELINE_ROLE
+          role-session-name: cfct-dev-pipeline-session
+          aws-region: $TARGET_REGION
+      - name:  Copy custom-control-tower-configuration.zip to dev s3
+        run: |
+          echo "Uploading customization zip to CT Dev S3 Bucket"
+          aws s3 cp $CFCT_CUSTOMIZATIONS_PATH/custom-control-tower-configuration.zip s3://custom-control-tower-configuration-$AWS_CT_DEV_ACCOUNT-$TARGET_REGION/custom-control-tower-configuration.zip
+
+  upload_to_prod_s3:
+    needs: create_zip
+    runs_on: ubuntu_latest
+    if: github.ref_name == 'production'
+    steps:
+      - name: Git clone the repository
+        uses: actions/checkout@v3
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::$AWS_CT_PROD_ACCOUNT:role/$GITHUB_PIPELINE_ROLE
+          role-session-name: cfct-prod-pipeline-session
+          aws-region: $TARGET_REGION
+      - name:  Copy custom-control-tower-configuration.zip to prod s3
+        run: |
+          echo "Uploading customization zip to CT Prod S3 Bucket"
+          aws s3 cp $CFCT_CUSTOMIZATIONS_PATH/custom-control-tower-configuration.zip s3://custom-control-tower-configuration-$AWS_CT_PROD_ACCOUNT-$TARGET_REGION/custom-control-tower-configuration.zip
+
+  
+
+

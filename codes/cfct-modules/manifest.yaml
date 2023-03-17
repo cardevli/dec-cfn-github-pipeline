@@ -1,0 +1,18 @@
+---
+region: us-east-1
+version: 2021-03-15
+
+resources:
+
+  ##########################
+  # Required Tags Config Rule #
+  ##########################
+  - name: required-tags-config-rule
+    resource_file: templates/aws-config-required-tags.yaml
+    parameter_file: parameters/aws-config-required-tags.json
+    deploy_method: stack_set
+    deployment_targets:
+      organizational_units: # :type: list
+        - Root
+    regions:
+      - us-east-1

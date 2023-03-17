@@ -1,0 +1,295 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+# Version 1.0.1
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AWS CloudFormation template to create IAM service account to use in GitHub pipeline to upload CFCT config'
+
+Metadata:
+  AWS::CloudFormation::Interface: # Interface for console deployments
+    ParameterGroups:
+      - Label: # GitHub Configurations
+          default: "Configurations for GitHub access"
+        Parameters: 
+          - pCfCTConfigBucket
+          - pGitHubCredentialsIAMRole
+          - pGitHubOrg
+          - pGitHubRepoName
+          - pOIDCProviderArn
+          - pOIDCAudience
+          - pThumbprintList
+
+      - Label: # tag 1
+          default: "(Optional) Key/Value Pair for Tag 1"
+        Parameters:
+          - pUserDefinedTagKey1
+          - pUserDefinedTagValue1
+
+      - Label: # tag 2 
+          default: "(Optional) Key/Value Pair for Tag 2"
+        Parameters:         
+          - pUserDefinedTagKey2
+          - pUserDefinedTagValue2
+
+      - Label: # tag 3
+          default: "(Optional) Key/Value Pair for Tag 3"
+        Parameters:          
+          - pUserDefinedTagKey3
+          - pUserDefinedTagValue3
+
+      - Label: # tag 4
+          default: "(Optional) Key/Value Pair for Tag 4"
+        Parameters:          
+          - pUserDefinedTagKey4
+          - pUserDefinedTagValue4
+
+      - Label: # tag 5
+          default: "(Optional) Key/Value Pair for Tag 5"
+        Parameters:
+          - pUserDefinedTagKey5
+          - pUserDefinedTagValue5
+    
+    ParameterLabels:
+      pUserDefinedTagKey1:
+        default: Enter a tag Key for 1st Tag
+      pUserDefinedTagValue1:
+        default: Enter a tag Value for 1st Tag
+      pUserDefinedTagKey2:
+        default: Enter a tag Key for 2nd Tag
+      pUserDefinedTagValue2:
+        default: Enter a tag Value for 2nd Tag
+      pUserDefinedTagKey3:
+        default: Enter a tag Key for 3rd Tag
+      pUserDefinedTagValue3:
+        default: Enter a tag Value for 3rd Tag
+      pUserDefinedTagKey4:
+        default: Enter a tag Key for 4th Tag
+      pUserDefinedTagValue4:
+        default: Enter a tag Value for 4th Tag
+      pUserDefinedTagKey5:
+        default: Enter a tag Key for the 5th tag
+      pUserDefinedTagValue5:
+        default: Enter a tag Value for 5th Tag
+
+
+Parameters:
+  # Parameter for name of CFCT configuration bucket
+  pCfCTConfigBucket:
+    Type: String
+    Description: Control Tower customization configuration bucket
+    AllowedPattern: "^[0-9a-z.-]{3,63}$"
+    ConstraintDescription: S3 Bucket names must be globally unique and consist of 3 to 63 lowercase letters, digits, and specific special characters .-
+    Default: "custom-control-tower-configuration-928700945928-us-east-1"
+
+  # Parameter for name of IAM Role to be used for service account
+  pGitHubCredentialsIAMRole:
+    Type: String
+    Description: Role name for pipeline IAM role
+    AllowedPattern: "^[0-9a-z+=,.@_-]{0,128}$"
+    ConstraintDescription: Name of role must be unique within the account and must be alphanumeric, including the following specific special characters +=,.@_-
+    Default: "github-cfct-pipeline-role"
+  
+  # Parameter for the name of the GitHub Org
+  pGitHubOrg:
+    Type: String
+    Description: Name of the GitHub Organization
+    AllowedPattern: "^[0-9a-z+=,.@_-]{0,128}$"
+    ConstraintDescription: Name of GitHub Organization must be unique within the account and must be alphanumeric, including the following specific special characters +=,.@_-
+    Default: ""
+
+  # Parameter for the name of the GitHub repository
+  pGitHubRepoName:
+    Type: String
+    Description: Name of the GitHub repository
+    AllowedPattern: "^[0-9a-zA-Z+=/,.@_-]{0,128}$"
+    ConstraintDescription: Name of GitHub repository must be unique within the account and must be alphanumeric, including the following specific special characters +=,.@_-
+    Default: dec-cfn-github-pipeline-2
+
+  # Parameter for the OIDC Provider ARN
+  pOIDCProviderArn:
+    Type: String
+    Description: ARN for the GitHub OIDC Provider
+    # AllowedPattern: "^arn:aws:iam:[a-z]{2}-[a-z]+-\\d{1}:\\d{12}:oidc-provider\\/[a-zA-Z0-9/+=._-]+$|^$"
+    # ConstraintDescription: The OIDC Provider ARN must be unique within the account and must be alphanumeric, including the following specific special characters +=,.@_-
+    Default: "arn:aws:iam::928700945928:oidc-provider/token.actions.githubusercontent.com/"
+  
+  # Parameter for the name of the audience supplied to configure-aws-credentials
+  pOIDCAudience:
+    Type: String
+    Description: The audience supplied to configure-aws-credentials
+    AllowedPattern: "^[0-9a-z+=,.@_-]{0,128}$"
+    ConstraintDescription: The OIDC Audience must be unique within the account and must be alphanumeric, including the following specific special characters +=,.@_-
+    Default: "sts.amazon.aws.com"
+
+  # Parameter for thumbprint of an Open ID Connector which is a SHA1 hash of the public certficate of the host
+  pThumbprintList:
+    Type: String
+    Description: A thumbprint of an Open ID Connector is a SHA1 hash of the public certificate of the host
+    AllowedPattern: "^[0-9a-z+=,.@_-]{0,128}$"
+    ConstraintDescription: The thumbprint list must be unique within the account and must be alphanumeric, including the following specific special characters +=,.@_-
+    Default: "6938fd4d98bab03faadb97b34396831e3780aea1"
+  
+  # optional parameters for tags
+  # parameter for Tag 1 Key
+  pUserDefinedTagKey1: 
+    Type: String
+    Description: Key for user defined tag 1
+    AllowedPattern: "^(?!aws:)[\\w\\s_.:=+-@/]{0,128}"
+    ConstraintDescription: Must match the allowable values for a Tag Key. This must NOT begin with "aws:" and can only contain alphanumeric characters or specific special characters _.:/=+-@ up to 128 characters  
+
+  # parameter for Tag 1 Value
+  pUserDefinedTagValue1: 
+    Type: String
+    Description: Value for user defined tag 1
+    AllowedPattern: "^[\\w\\s_.:=+-@/]{0,256}"
+    ConstraintDescription: Must match the allowable values for a Tag Value. This can only contain alphanumeric characters or special characters _.:/=+-@ up to 256 characters
+  
+  # parameter for Tag 2 Key
+  pUserDefinedTagKey2: 
+    Type: String
+    Description: Key for user defined tag 2
+    AllowedPattern: "^(?!aws:)[\\w\\s_.:=+-@/]{0,128}"
+    ConstraintDescription: Must match the allowable values for a Tag Key. This must NOT begin with "aws:" and can only contain alphanumeric characters or specific special characters _.:/=+-@ up to 128 characters
+
+  # parameter for Tag 2 Value
+  pUserDefinedTagValue2: 
+    Type: String
+    Description: Value for user defined tag 2
+    AllowedPattern: "^[\\w\\s_.:=+-@/]{0,256}"
+    ConstraintDescription: Must match the allowable values for a Tag Value. This can only contain alphanumeric characters or special characters _.:/=+-@ up to 256 characters  
+
+  # parameter for Tag 3 Key
+  pUserDefinedTagKey3: 
+    Type: String
+    Description: Key for user defined tag 3
+    AllowedPattern: "^(?!aws:)[\\w\\s_.:=+-@/]{0,128}"
+    ConstraintDescription: Must match the allowable values for a Tag Key. This must NOT begin with "aws:" and can only contain alphanumeric characters or specific special characters _.:/=+-@ up to 128 characters  
+
+  # parameter for Tag 3 Value 
+  pUserDefinedTagValue3: 
+    Type: String
+    Description: Value for user defined tag 3
+    AllowedPattern: "^[\\w\\s_.:=+-@/]{0,256}"
+    ConstraintDescription: Must match the allowable values for a Tag Value. This can only contain alphanumeric characters or special characters _.:/=+-@ up to 256 characters  
+
+  # parameter for Tag 4 key 
+  pUserDefinedTagKey4: 
+    Type: String
+    Description: Key for user defined tag 4
+    AllowedPattern: "^(?!aws:)[\\w\\s_.:=+-@/]{0,128}"
+    ConstraintDescription: Must match the allowable values for a Tag Key. This must NOT begin with "aws:" and can only contain alphanumeric characters or specific special characters _.:/=+-@ up to 128 characters 
+
+  # parameter for Tag 4 Value
+  pUserDefinedTagValue4: 
+    Type: String
+    Description: Value for user defined tag 4
+    AllowedPattern: "^[\\w\\s_.:=+-@/]{0,256}"
+    ConstraintDescription: Must match the allowable values for a Tag Value. This can only contain alphanumeric characters or special characters _.:/=+-@ up to 256 characters  
+
+  # parameter for Tag 5 Key
+  pUserDefinedTagKey5: 
+    Type: String
+    Description: Key for user defined tag 5
+    AllowedPattern: "^(?!aws:)[\\w\\s_.:=+-@/]{0,128}"
+    ConstraintDescription: Must match the allowable values for a Tag Key. This must NOT begin with "aws:" and can only contain alphanumeric characters or specific special characters _.:/=+-@ up to 128 characters   
+
+  # parameter for Tag 5 Value  
+  pUserDefinedTagValue5: 
+    Type: String
+    Description: Value for user defined tag 5
+    AllowedPattern: "^[\\w\\s_.:=+-@/]{0,256}"
+    ConstraintDescription: Must match the allowable values for a Tag Value. This can only contain alphanumeric characters or special characters _.:/=+-@ up to 256 characters
+  
+Conditions:
+  cCreateOIDCProvider: !Equals
+    - !Ref pOIDCProviderArn
+    - ""
+
+  # conditions to control creation of user-defined tags
+  # conditons to control creation of tag 1
+  cCreateTag1: !And
+  - !Not [!Equals [!Ref pUserDefinedTagKey1, '']]
+  - !Not [!Equals [!Ref pUserDefinedTagValue1, '']]
+  
+  #  conditons to control creation of tag 2
+  cCreateTag2: !And
+  - !Not [!Equals [!Ref pUserDefinedTagKey2, '']]
+  - !Not [!Equals [!Ref pUserDefinedTagValue2, '']]
+  
+  # conditons to control creation of tag 3
+  cCreateTag3: !And
+  - !Not [!Equals [!Ref pUserDefinedTagKey3, '']]
+  - !Not [!Equals [!Ref pUserDefinedTagValue3, '']]
+  
+  # conditons to control creation of tag 4 
+  cCreateTag4: !And
+  - !Not [!Equals [!Ref pUserDefinedTagKey4, '']]
+  - !Not [!Equals [!Ref pUserDefinedTagValue4, '']]
+  
+  # conditons to control creation of tag 5 
+  cCreateTag5: !And
+  - !Not [!Equals [!Ref pUserDefinedTagKey5, '']]
+  - !Not [!Equals [!Ref pUserDefinedTagValue5, '']]
+
+
+Resources:
+  # Creates IAM role for service account to use in GitHub pipeline to upload CFCT config via inline policy
+  rPipelineIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref pGitHubCredentialsIAMRole
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal: 
+              Federated: !If
+                - cCreateOIDCProvider
+                - !Ref rGitHubOIDC
+                - !Ref pOIDCProviderArn
+            Condition:
+              StringEquals: 
+                token.actions.githubusercontent.com:aud: !Ref pOIDCAudience
+              StringLike: 
+                token.actions.githubusercontent.com:sub: !Sub "repo:${pGitHubOrg}/${pGitHubRepoName}:*"
+      Policies:
+        - PolicyName: s3-kms-permissions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+                - s3:ListAllMyBuckets
+                - s3:ListMultipartUploadParts
+                - s3:PutObject
+                - s3:GetObject
+              Resource:
+                - !Sub "arn:${AWS::Partition}:s3:::${pCfCTConfigBucket}"
+                - !Sub "arn:${AWS::Partition}:s3:::${pCfCTConfigBucket}/*"
+            - Effect: Allow
+              Action:
+                - kms:GenerateDataKey
+                - kms:Encrypt
+              Resource: "*" # Wildcard allows IAM User to use any KMS key selected for S3 encryption
+      Tags: # conditionally apply tags to resources based on user-defined tag keys 
+        - !If [ cCreateTag1, {Key: !Ref pUserDefinedTagKey1, Value: !Ref pUserDefinedTagValue1}, !Ref AWS::NoValue ]
+        - !If [ cCreateTag2, {Key: !Ref pUserDefinedTagKey2, Value: !Ref pUserDefinedTagValue2}, !Ref AWS::NoValue ]
+        - !If [ cCreateTag3, {Key: !Ref pUserDefinedTagKey3, Value: !Ref pUserDefinedTagValue3}, !Ref AWS::NoValue ]
+        - !If [ cCreateTag4, {Key: !Ref pUserDefinedTagKey4, Value: !Ref pUserDefinedTagValue4}, !Ref AWS::NoValue ]
+        - !If [ cCreateTag5, {Key: !Ref pUserDefinedTagKey5, Value: !Ref pUserDefinedTagValue5}, !Ref AWS::NoValue ]  
+
+  rGitHubOIDC:
+    Type: AWS::IAM::OIDCProvider
+    Condition: cCreateOIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      ThumbprintList: 
+        - !Ref pThumbprintList
+
+Outputs:
+  oPipelineIAMRoleArn:
+    Condition: cCreateOIDCProvider
+    Description: AWS Arn of the IAM role for GitHub
+    Value: !GetAtt rPipelineIAMRole.Arn

@@ -1,0 +1,26 @@
+[
+  {
+    "ParameterKey": "pTag1Key", 
+    "ParameterValue": "cost-center"
+  },
+  {
+    "ParameterKey": "pTag2Key",
+    "ParameterValue": "environment"
+  },
+  {
+    "ParameterKey": "pTag3Key",
+    "ParameterValue": "team"
+  },
+  {
+    "ParameterKey": "pTag4Key",
+    "ParameterValue": "application-id"
+  },
+  {
+    "ParameterKey": "pTag5Key",
+    "ParameterValue": "application-owner"
+  },
+  {
+    "ParameterKey": "pTag6Key",
+    "ParameterValue": "date-created"  
+  }   
+]

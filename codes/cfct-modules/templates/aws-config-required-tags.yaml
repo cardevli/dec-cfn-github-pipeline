@@ -1,0 +1,205 @@
+########################################################################
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+########################################################################
+AWSTemplateFormatVersion: 2010-09-09
+Description: Template defining AWS Config Managed Rule for required-tags
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Required
+        Parameters:
+          - pTag1Key
+          - pTag1Value
+      - Label:
+          default: Optional
+        Parameters:
+          - pTag2Key
+          - pTag2Value
+          - pTag3Key
+          - pTag3Value
+          - pTag4Key
+          - pTag4Value
+          - pTag5Key
+          - pTag5Value
+          - pTag6Key
+          - pTag6Value
+Parameters:
+  pConfigRuleName:
+    Type: String
+    Default: aws-config-required-tags
+    Description: The name that you assign to the AWS Config rule.
+    AllowedPattern: ".*\\S.*{1,128}"
+    ConstraintDescription: "This parameter is required. Must match up to 128 characters and match this pattern .*\\S.* as defined in the Config User Guide"
+  pTag1Key:
+    Type: String
+    Default: cost-center
+    Description: Key of the required tag.
+    MinLength: "1"
+  pTag1Value:
+    Type: String
+    Default: ""
+    Description:
+      Optional value of the required tag. Separate multiple values with
+      commas.
+  pTag2Key:
+    Type: String
+    Default: "environment"
+    Description: Key of a second required tag.
+  pTag2Value:
+    Type: String
+    Default: ""
+    Description:
+      Optional value of the second required tag. Separate multiple values
+      with commas.
+  pTag3Key:
+    Type: String
+    Default: "team"
+    Description: Key of a third required tag.
+  pTag3Value:
+    Type: String
+    Default: ""
+    Description:
+      Optional value of the third required tag. Separate multiple values
+      with commas.
+  pTag4Key:
+    Type: String
+    Default: "application-id"
+    Description: Key of a fourth required tag.
+  pTag4Value:
+    Type: String
+    Default: ""
+    Description:
+      Optional value of the fourth required tag. Separate multiple values
+      with commas.
+  pTag5Key:
+    Type: String
+    Default: "application-owner"
+    Description: Key of a fifth required tag.
+  pTag5Value:
+    Type: String
+    Default: ""
+    Description:
+      Optional value of the fifth required tag. Separate multiple values
+      with commas.
+  pTag6Key:
+    Type: String
+    Default: "date-created"
+    Description: Key of a sixth required tag.
+  pTag6Value:
+    Type: String
+    Default: ""
+    Description:
+      Optional value of the sixth required tag. Separate multiple values
+      with commas.
+Conditions:
+  cTag1Key: !Not
+    - !Equals
+      - ""
+      - !Ref "pTag1Key"
+  cTag1Value: !Not
+    - !Equals
+      - ""
+      - !Ref "pTag1Value"
+  cTag2Key: !Not
+    - !Equals
+      - ""
+      - !Ref "pTag2Key"
+  cTag2Value: !Not
+    - !Equals
+      - ""
+      - !Ref "pTag2Value"
+  cTag3Key: !Not
+    - !Equals
+      - ""
+      - !Ref "pTag3Key"
+  cTag3Value: !Not
+    - !Equals
+      - ""
+      - !Ref "pTag3Value"
+  cTag4Key: !Not
+    - !Equals
+      - ""
+      - !Ref "pTag4Key"
+  cTag4Value: !Not
+    - !Equals
+      - ""
+      - !Ref "pTag4Value"
+  cTag5Key: !Not
+    - !Equals
+      - ""
+      - !Ref "pTag5Key"
+  cTag5Value: !Not
+    - !Equals
+      - ""
+      - !Ref "pTag5Value"
+  cTag6Key: !Not
+    - !Equals
+      - ""
+      - !Ref "pTag6Key"
+  cTag6Value: !Not
+    - !Equals
+      - ""
+      - !Ref "pTag6Value"
+
+Resources:
+  # Checks whether your resources have the tags that you specify.
+  rAWSConfigRule:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: !Ref "pConfigRuleName"
+      Description: Checks whether your resources have the tags that you specify.
+      InputParameters:
+        tag1Key: !If [cTag1Key, !Ref "pTag1Key", !Ref "AWS::NoValue"]
+        tag1Value: !If [cTag1Value, !Ref "pTag1Value", !Ref "AWS::NoValue"]
+        tag2Key: !If [cTag2Key, !Ref "pTag2Key", !Ref "AWS::NoValue"]
+        tag2Value: !If [cTag2Value, !Ref "pTag2Value", !Ref "AWS::NoValue"]
+        tag3Key: !If [cTag3Key, !Ref "pTag3Key", !Ref "AWS::NoValue"]
+        tag3Value: !If [cTag3Value, !Ref "pTag3Value", !Ref "AWS::NoValue"]
+        tag4Key: !If [cTag4Key, !Ref "pTag4Key", !Ref "AWS::NoValue"]
+        tag4Value: !If [cTag4Value, !Ref "pTag4Value", !Ref "AWS::NoValue"]
+        tag5Key: !If [cTag5Key, !Ref "pTag5Key", !Ref "AWS::NoValue"]
+        tag5Value: !If [cTag5Value, !Ref "pTag5Value", !Ref "AWS::NoValue"]
+        tag6Key: !If [cTag6Key, !Ref "pTag6Key", !Ref "AWS::NoValue"]
+        tag6Value: !If [cTag6Value, !Ref "pTag6Value", !Ref "AWS::NoValue"]
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::ACM::Certificate
+          - AWS::AutoScaling::AutoScalingGroup
+          - AWS::CloudFormation::Stack
+          - AWS::CodeBuild::Project
+          - AWS::DynamoDB::Table
+          - AWS::EC2::CustomerGateway
+          - AWS::EC2::Instance
+          - AWS::EC2::InternetGateway
+          - AWS::EC2::NetworkAcl
+          - AWS::EC2::NetworkInterface
+          - AWS::EC2::RouteTable
+          - AWS::EC2::SecurityGroup
+          - AWS::EC2::Subnet
+          - AWS::EC2::Volume
+          - AWS::EC2::VPC
+          - AWS::EC2::VPNConnection
+          - AWS::EC2::VPNGateway
+          - AWS::ElasticLoadBalancing::LoadBalancer
+          - AWS::ElasticLoadBalancingV2::LoadBalancer
+          - AWS::RDS::DBInstance
+          - AWS::RDS::DBSecurityGroup
+          - AWS::RDS::DBSnapshot
+          - AWS::RDS::DBSubnetGroup
+          - AWS::RDS::EventSubscription
+          - AWS::Redshift::Cluster
+          - AWS::Redshift::ClusterParameterGroup
+          - AWS::Redshift::ClusterSecurityGroup
+          - AWS::Redshift::ClusterSnapshot
+          - AWS::Redshift::ClusterSubnetGroup
+          - AWS::S3::Bucket
+      Source:
+        Owner: AWS
+        SourceIdentifier: REQUIRED_TAGS
+
+Outputs:
+  oRequiredTagsRuleArn:
+    Description: Required Tags Config Rule
+    Value: !Ref rAWSConfigRule
