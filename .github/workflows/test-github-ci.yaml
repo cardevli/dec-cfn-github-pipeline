@@ -49,9 +49,9 @@ jobs:
     - name: configure aws credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
-        role-to-assume: arn:aws:iam::$AWS_CT_DEV_ACCOUNT:role/$GITHUB_PIPELINE_ROLE
+        role-to-assume: arn:aws:iam::${{ env.AWS_CT_DEV_ACCOUNT }}:role/${{ env.GITHUB_PIPELINE_ROLE }}
         role-session-name: cfct-dev-pipeline-session
-        aws-region: $TARGET_REGION
+        aws-region: ${{ env.TARGET_REGION }}
     - name:  Copy custom-control-tower-configuration.zip to dev s3
       run: |
         echo "Uploading customization zip to CT Dev S3 Bucket"
