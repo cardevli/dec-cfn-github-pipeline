@@ -248,11 +248,10 @@ Resources:
                 - !Ref rGitHubOIDC
                 - !Ref pOIDCProviderArn
             Condition:
-              StringEquals:
-                token.actions.githubusercontent.com:aud: !Ref pOIDCAudience
-                token.actions.githubusercontent.com:iss: "https://token.actions.githubusercontent.com"
               StringLike: 
                 token.actions.githubusercontent.com:sub: !Sub "repo:${pGitHubOrg}/${pGitHubRepoName}:*"
+                token.actions.githubusercontent.com:aud: !Ref pOIDCAudience
+                token.actions.githubusercontent.com:iss: "https://token.actions.githubusercontent.com"
       Policies:
         - PolicyName: s3-kms-permissions
           PolicyDocument:
