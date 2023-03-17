@@ -1,5 +1,5 @@
 name: Deploy CfCT via GitHub Pipeline
-# test
+# test2
 
 on: 
   push:
