@@ -51,16 +51,14 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::${{ env.AWS_CT_DEV_ACCOUNT }}:role/${{ env.GITHUB_PIPELINE_ROLE }}
           aws-region: ${{ env.TARGET_REGION }}
-      - name: Make artifact directory
-        run: mkdir -p ./artifacts/${{ github.repository }}
       - name: Create ZIP file
-        uses: montudor/action-zip@v1
-        with:
-          args: zip -r ./artifacts/${{ github.repository }}/custom-control-tower-configuration.zip . -i codes/cfct-modules
+        run: |
+          cd $CFCT_CUSTOMIZATIONS_PATH
+          zip -r custom-control-tower-configuration.zip *
       - name:  Copy custom-control-tower-configuration.zip to dev s3
         run: |
           echo "Uploading customization zip to CT Dev S3 Bucket"
-          aws s3 cp ./artifacts/${{ github.repository }}/custom-control-tower-configuration.zip s3://custom-control-tower-configuration-$AWS_CT_DEV_ACCOUNT-$TARGET_REGION
+          aws s3 cp custom-control-tower-configuration.zip s3://custom-control-tower-configuration-$AWS_CT_DEV_ACCOUNT-$TARGET_REGION
 
 
 
