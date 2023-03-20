@@ -42,9 +42,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create ZIP file
-        uses: montudor/action-zip@v0.1.0
+        uses: montudor/action-zip@v1
         with:
-          args: zip -r ${{ github.repository }}/${{ env.CFCT_CUSTOMIZATIONS_PATH }} . -i codes/cfct-modules
+          args: zip -qq custom-control-tower-configuration.zip codes/cfct-modules
+      - uses: actions/upload-artifact@v2
+        with:
+          name: custom-control-tower-configuration.zip
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -54,7 +57,7 @@ jobs:
       - name:  Copy custom-control-tower-configuration.zip to dev s3
         run: |
           echo "Uploading customization zip to CT Dev S3 Bucket"
-          aws s3 cp ${{ github.repository }}/artifacts/custom-control-tower-configuration.zip s3://custom-control-tower-configuration-$AWS_CT_DEV_ACCOUNT-$TARGET_REGION/custom-control-tower-configuration.zip
+          aws s3 cp custom-control-tower-configuration.zip s3://custom-control-tower-configuration-$AWS_CT_DEV_ACCOUNT-$TARGET_REGION/custom-control-tower-configuration.zip
       # - name: Push ZIP to Dev S3
       #   uses: jakejarvis/s3-sync-action@v0.3.1
       #   env: 
