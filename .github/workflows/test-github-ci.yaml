@@ -49,6 +49,14 @@ jobs:
       with:
         name: custom-control-tower-configuration.zip
         path: ${{ env.CFCT_CUSTOMIZATIONS_PATH }}/custom-control-tower-configuration.zip
+    - name: Download cfct configuration artifact to specific repo
+      uses: actions/download-artifact@v3
+      with:
+        name: custom-control-tower-configuration.zip
+        path: ${{ env.CFCT_CUSTOMIZATIONS_PATH }}
+    - name: Display structure of downloaded files
+      run: ls -R
+      working-directory: ${{ env.CFCT_CUSTOMIZATIONS_PATH }}
 
   upload_to_dev_s3:
     needs: create_zip
