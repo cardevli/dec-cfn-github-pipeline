@@ -270,7 +270,7 @@ Resources:
               Action:
                 - 'kms:GenerateDataKey'
                 - 'kms:Encrypt'
-                - 'kms: Decrypt'
+                - 'kms:Decrypt'
               Resource: "*" # Wildcard allows IAM User to use any KMS key selected for S3 encryption
             - Effect: Allow
               Action: sts:AssumeRoleWithWebIdentity

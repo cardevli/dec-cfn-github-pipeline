@@ -40,27 +40,38 @@ jobs:
 
   create_zip_upload_to_dev_s3:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Configure AWS credentials for dev account
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_CT_DEV_ACCOUNT }}:role/${{ env.GITHUB_PIPELINE_ROLE }}
+          aws-region: ${{ env.TARGET_REGION }}
       - name: Make artifact directory
         run: mkdir -p ./artifacts/${{ github.repository }}
       - name: Create ZIP file
         uses: montudor/action-zip@v1
         with:
           args: zip -r ./artifacts/${{ github.repository }}/custom-control-tower-configuration.zip . -i codes/cfct-modules
-      - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          role-to-assume: arn:aws:iam::${{ env.AWS_CT_DEV_ACCOUNT }}:role/${{ env.GITHUB_PIPELINE_ROLE }}
-          role-session-name: cfct-dev-pipeline-session
-          aws-region: ${{ env.TARGET_REGION }}
-      - name: Push ZIP to Dev S3
-        uses: jakejarvis/s3-sync-action@v0.3.1
-        env: 
-          SOURCE_DIR: './artifacts'
-          AWS_REGION: ${{ env.TARGET_REGION }}
-          AWS_S3_BUCKET: 'custom-control-tower-configuration-$AWS_CT_DEV_ACCOUNT-$TARGET_REGION'
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRETE_ACCESS_KEY }}
+      - name:  Copy custom-control-tower-configuration.zip to dev s3
+        run: |
+          echo "Uploading customization zip to CT Dev S3 Bucket"
+          aws s3 cp ./artifacts/${{ github.repository }}/custom-control-tower-configuration.zip s3://custom-control-tower-configuration-$AWS_CT_DEV_ACCOUNT-$TARGET_REGION
+
+
+
+      # - name: Push ZIP to Dev S3
+      #   uses: jakejarvis/s3-sync-action@v0.3.1
+      #   env: 
+      #     SOURCE_DIR: './artifacts'
+      #     AWS_REGION: ${{ env.TARGET_REGION }}
+      #     AWS_S3_BUCKET: 'custom-control-tower-configuration-$AWS_CT_DEV_ACCOUNT-$TARGET_REGION'
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRETE_ACCESS_KEY }}
   # create_zip: 
   #   runs-on: ubuntu-latest
   #   steps:
