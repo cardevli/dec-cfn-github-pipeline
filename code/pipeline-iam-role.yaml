@@ -259,17 +259,18 @@ Resources:
             Statement:
             - Effect: Allow
               Action:
-                - s3:ListAllMyBuckets
-                - s3:ListMultipartUploadParts
-                - s3:PutObject
-                - s3:GetObject
+                - 's3:ListAllMyBuckets'
+                - 's3:ListMultipartUploadParts'
+                - 's3:PutObject'
+                - 's3:GetObject'
               Resource:
                 - !Sub "arn:${AWS::Partition}:s3:::${pCfCTConfigBucket}"
                 - !Sub "arn:${AWS::Partition}:s3:::${pCfCTConfigBucket}/*"
             - Effect: Allow
               Action:
-                - kms:GenerateDataKey
-                - kms:Encrypt
+                - 'kms:GenerateDataKey'
+                - 'kms:Encrypt'
+                - 'kms: Decrypt'
               Resource: "*" # Wildcard allows IAM User to use any KMS key selected for S3 encryption
             - Effect: Allow
               Action: sts:AssumeRoleWithWebIdentity
