@@ -44,7 +44,7 @@ jobs:
       - name: Create ZIP file
         uses: montudor/action-zip@v0.1.0
         with:
-          args: zip -r ${{ github.repository }}/${{ env.CFCT_CUSTOMIZATIONS_PATH }}/custom-control-tower-configuration.zip . -i codes/cfct-modules
+          args: zip -r ${{ github.repository }}/${{ env.CFCT_CUSTOMIZATIONS_PATH }} . -i codes/cfct-modules
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
