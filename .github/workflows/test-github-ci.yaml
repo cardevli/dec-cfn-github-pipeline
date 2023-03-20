@@ -44,7 +44,7 @@ jobs:
       - name: Create ZIP file
         uses: montudor/action-zip@v1
         with:
-          args: zip -r custom-control-tower-configuration.zip codes/cfct-modules
+          args: zip -r custom-control-tower-configuration.zip . -i codes/cfct-modules
       - uses: actions/upload-artifact@v2
         with:
           name: custom-control-tower-configuration.zip
