@@ -275,6 +275,8 @@ Resources:
             - Effect: Allow
               Action: sts:AssumeRoleWithWebIdentity
               Resource: "arn:aws:iam::928700945928:role/*"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
       Tags: # conditionally apply tags to resources based on user-defined tag keys 
         - !If [ cCreateTag1, {Key: !Ref pUserDefinedTagKey1, Value: !Ref pUserDefinedTagValue1}, !Ref AWS::NoValue ]
         - !If [ cCreateTag2, {Key: !Ref pUserDefinedTagKey2, Value: !Ref pUserDefinedTagValue2}, !Ref AWS::NoValue ]
