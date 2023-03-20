@@ -44,19 +44,30 @@ jobs:
     - run: |
         cd $CFCT_CUSTOMIZATIONS_PATH
         zip -r custom-control-tower-configuration.zip *
-    - name: Create cfct configuration artifact
+    - name: Create temp directory
+      run: mkdir downloads
+    - name: add artifact to publish to temp folder
+      run: |
+        cd downloads
+        echo 'custom-control-tower-configuration.zip' > custom-control-tower-configuration.zip
+    - name: upload artifact
       uses: actions/upload-artifact@v3
       with:
         name: custom-control-tower-configuration.zip
-        path: ${{ env.CFCT_CUSTOMIZATIONS_PATH }}/custom-control-tower-configuration.zip
-    - name: Download cfct configuration artifact to specific repo
-      uses: actions/download-artifact@v3
-      with:
-        name: custom-control-tower-configuration.zip
-        path: ${{ env.CFCT_CUSTOMIZATIONS_PATH }}
-    - name: Display structure of downloaded files
-      run: ls -R
-      working-directory: ${{ env.CFCT_CUSTOMIZATIONS_PATH }}
+        path: downloads
+    # - name: Create cfct configuration artifact
+    #   uses: actions/upload-artifact@v3
+    #   with:
+    #     name: custom-control-tower-configuration.zip
+    #     path: ${{ env.CFCT_CUSTOMIZATIONS_PATH }}/custom-control-tower-configuration.zip
+    # - name: Download cfct configuration artifact to specific repo
+    #   uses: actions/download-artifact@v3
+    #   with:
+    #     name: custom-control-tower-configuration.zip
+    #     path: ${{ env.CFCT_CUSTOMIZATIONS_PATH }}
+    # - name: Display structure of downloaded files
+    #   run: ls -R
+    #   working-directory: ${{ env.CFCT_CUSTOMIZATIONS_PATH }}
 
   upload_to_dev_s3:
     needs: create_zip
@@ -71,10 +82,14 @@ jobs:
         role-to-assume: arn:aws:iam::${{ env.AWS_CT_DEV_ACCOUNT }}:role/${{ env.GITHUB_PIPELINE_ROLE }}
         role-session-name: cfct-dev-pipeline-session
         aws-region: ${{ env.TARGET_REGION }}
-    - name:  Copy custom-control-tower-configuration.zip to dev s3
+    - name: copy custom-control-tower-configuration zip to dev s3
       run: |
         echo "Uploading customization zip to CT Dev S3 Bucket"
-        aws s3 cp $CFCT_CUSTOMIZATIONS_PATH/custom-control-tower-configuration.zip s3://custom-control-tower-configuration-$AWS_CT_DEV_ACCOUNT-$TARGET_REGION/custom-control-tower-configuration.zip
+        aws s3 cp downloads/custom-control-tower-configuration.zip s3://custom-control-tower-configuration-$AWS_CT_DEV_ACCOUNT-$TARGET_REGION/custom-control-tower-configuration.zip
+    # - name:  Copy custom-control-tower-configuration.zip to dev s3
+    #   run: |
+    #     echo "Uploading customization zip to CT Dev S3 Bucket"
+    #     aws s3 cp $CFCT_CUSTOMIZATIONS_PATH/custom-control-tower-configuration.zip s3://custom-control-tower-configuration-$AWS_CT_DEV_ACCOUNT-$TARGET_REGION/custom-control-tower-configuration.zip
 
   # upload_to_prod_s3:
   #   needs: create_zip
