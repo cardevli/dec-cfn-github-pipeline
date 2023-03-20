@@ -19,6 +19,16 @@ permissions:
   contents: read
 
 jobs:
+  configure_aws_credentials: 
+    runs-on: ubuntu-latest
+    steps: 
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1-node16
+      with:
+        aws-region: ${{ env.TARGET_REGION }}
+        role-to-assume: arn:aws:iam::$AWS_CT_DEV_ACCOUNT:role/$GITHUB_PIPELINE_ROLE
+        role-session-name: myGitHubActions
+
   validate:
     runs-on: ubuntu-latest
     steps:

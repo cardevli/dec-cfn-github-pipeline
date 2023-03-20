@@ -16,7 +16,7 @@ Metadata:
           - pGitHubOrg
           - pGitHubRepoName
           - pOIDCProviderArn
-          - pOIDCAudience
+          # - pOIDCAudience
           - pThumbprintList
 
       - Label: # tag 1
@@ -114,12 +114,12 @@ Parameters:
     Default: "arn:aws:iam::928700945928:oidc-provider/token.actions.githubusercontent.com"
   
   # Parameter for the name of the audience supplied to configure-aws-credentials
-  pOIDCAudience:
-    Type: String
-    Description: The audience supplied to configure-aws-credentials
-    AllowedPattern: "^[0-9a-z+=,.@_-]{0,128}$"
-    ConstraintDescription: The OIDC Audience must be unique within the account and must be alphanumeric, including the following specific special characters +=,.@_-
-    Default: "sts.amazon.aws.com"
+  # pOIDCAudience:
+  #   Type: String
+  #   Description: The audience supplied to configure-aws-credentials
+  #   AllowedPattern: "^[0-9a-z+=,.@_-]{0,128}$"
+  #   ConstraintDescription: The OIDC Audience must be unique within the account and must be alphanumeric, including the following specific special characters +=,.@_-
+  #   Default: "sts.amazon.aws.com"
 
   # Parameter for thumbprint of an Open ID Connector which is a SHA1 hash of the public certficate of the host
   pThumbprintList:
@@ -250,8 +250,8 @@ Resources:
             Condition:
               StringLike: 
                 token.actions.githubusercontent.com:sub: !Sub "repo:${pGitHubOrg}/${pGitHubRepoName}:*"
-                token.actions.githubusercontent.com:aud: !Ref pOIDCAudience
-                token.actions.githubusercontent.com:iss: "https://token.actions.githubusercontent.com"
+              #   token.actions.githubusercontent.com:aud: !Ref pOIDCAudience
+              #   token.actions.githubusercontent.com:iss: "https://token.actions.githubusercontent.com"
       Policies:
         - PolicyName: s3-kms-permissions
           PolicyDocument:
@@ -288,11 +288,12 @@ Resources:
       Url: https://token.actions.githubusercontent.com
       ClientIdList:
         - sts.amazonaws.com
+        - !Sub https://github.com/${pGitHubOrg}/${pGitHubRepoName}
       ThumbprintList: 
         - !Ref pThumbprintList
 
 Outputs:
   oPipelineIAMRoleArn:
-    Condition: cCreateOIDCProvider
+    # Condition: cCreateOIDCProvider
     Description: AWS Arn of the IAM role for GitHub
     Value: !GetAtt rPipelineIAMRole.Arn
