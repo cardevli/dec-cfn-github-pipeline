@@ -35,7 +35,7 @@ jobs:
     - name: Validate code with cfn-nag
       uses: stelligent/cfn_nag@master
       with:
-        input_path: $CFCT_CUSTOMIZATIONS_PATH/*     
+        input_path: ${{ env.CFCT_CUSTOMIZATIONS_PATH }}/*     
 
   create_zip: 
     runs-on: ubuntu-latest
@@ -48,7 +48,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: custom-control-tower-configuration.zip
-        path: $CFCT_CUSTOMIZATIONS_PATH/custom-control-tower-configuration.zip
+        path: ${{ env.CFCT_CUSTOMIZATIONS_PATH }}/custom-control-tower-configuration.zip
 
   upload_to_dev_s3:
     needs: create_zip
