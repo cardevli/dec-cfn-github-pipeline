@@ -46,7 +46,7 @@ jobs:
       - name: Create ZIP file
         uses: montudor/action-zip@v0.1.0
         with:
-          args: zip -r ./artifacts/${{ github.repository }}/custom-control-tower-configuration.zip ${{ env.CFCT_CUSTOMIZATIONS_PATH }}
+          args: zip -r ./artifacts/cardevli/dec-cfn-github-pipeline-2/custom-control-tower-configuration.zip . -i codes/cfct-modules
       - name: Push ZIP to Dev S3
         uses: jakejarvis/s3-sync-action@v0.3.1
         env: 
