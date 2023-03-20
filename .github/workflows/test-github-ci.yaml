@@ -55,10 +55,15 @@ jobs:
         run: |
           cd $CFCT_CUSTOMIZATIONS_PATH
           zip -r custom-control-tower-configuration.zip *
+      - name: Create cfct configuration artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: custom-control-tower-configuration.zip
+          path: ${{ env.CFCT_CUSTOMIZATIONS_PATH }}/custom-control-tower-configuration.zip
       - name:  Copy custom-control-tower-configuration.zip to dev s3
         run: |
           echo "Uploading customization zip to CT Dev S3 Bucket"
-          aws s3 cp custom-control-tower-configuration.zip s3://custom-control-tower-configuration-$AWS_CT_DEV_ACCOUNT-$TARGET_REGION
+          aws s3 cp $CFCT_CUSTOMIZATIONS_PATH/custom-control-tower-configuration.zip s3://custom-control-tower-configuration-$AWS_CT_DEV_ACCOUNT-$TARGET_REGION
 
 
 
@@ -70,6 +75,7 @@ jobs:
       #     AWS_S3_BUCKET: 'custom-control-tower-configuration-$AWS_CT_DEV_ACCOUNT-$TARGET_REGION'
       #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRETE_ACCESS_KEY }}
+
   # create_zip: 
   #   runs-on: ubuntu-latest
   #   steps:
