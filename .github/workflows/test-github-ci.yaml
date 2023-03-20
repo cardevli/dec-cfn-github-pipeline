@@ -1,5 +1,5 @@
 name: Deploy CfCT via GitHub Pipeline
-# test5
+# test6
 
 on: 
   push:
@@ -40,6 +40,7 @@ jobs:
 
   create_zip_upload_to_dev_s3:
     runs-on: ubuntu-latest
+    if: github.ref_name == 'development'
     permissions:
       id-token: write
       contents: read

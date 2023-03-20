@@ -17,7 +17,7 @@ Metadata:
           - pGitHubRepoName
           - pOIDCProviderArn
           # - pOIDCAudience
-          - pThumbprintList
+          # - pThumbprintList
 
       - Label: # tag 1
           default: "(Optional) Key/Value Pair for Tag 1"
@@ -122,12 +122,13 @@ Parameters:
   #   Default: "sts.amazon.aws.com"
 
   # Parameter for thumbprint of an Open ID Connector which is a SHA1 hash of the public certficate of the host
-  pThumbprintList:
-    Type: String
-    Description: A thumbprint of an Open ID Connector is a SHA1 hash of the public certificate of the host
-    AllowedPattern: "^[0-9a-z+=,.@_-]{0,128}$"
-    ConstraintDescription: The thumbprint list must be unique within the account and must be alphanumeric, including the following specific special characters +=,.@_-
-    Default: "6938fd4d98bab03faadb97b34396831e3780aea1"
+  # pThumbprintList:
+  #   Type: String
+  #   Description: A thumbprint of an Open ID Connector is a SHA1 hash of the public certificate of the host
+  #   AllowedPattern: "^[0-9a-z+=,.@_-]{0,128}$"
+  #   ConstraintDescription: The thumbprint list must be unique within the account and must be alphanumeric, including the following specific special characters +=,.@_-
+  #   Default: ""
+    # Default: "6938fd4d98bab03faadb97b34396831e3780aea1"
   
   # optional parameters for tags
   # parameter for Tag 1 Key
@@ -201,9 +202,9 @@ Parameters:
     ConstraintDescription: Must match the allowable values for a Tag Value. This can only contain alphanumeric characters or special characters _.:/=+-@ up to 256 characters
   
 Conditions:
-  cCreateOIDCProvider: !Equals
-    - !Ref pOIDCProviderArn
-    - ""
+  # cCreateOIDCProvider: !Equals
+  #   - !Ref pOIDCProviderArn
+  #   - ""
 
   # conditions to control creation of user-defined tags
   # conditons to control creation of tag 1
@@ -243,9 +244,9 @@ Resources:
           - Effect: Allow
             Action: sts:AssumeRoleWithWebIdentity
             Principal: 
-              Federated: !If
-                - cCreateOIDCProvider
-                - !Ref rGitHubOIDC
+              Federated: 
+                # - cCreateOIDCProvider
+                # - !Ref rGitHubOIDC
                 - !Ref pOIDCProviderArn
             Condition:
               StringLike: 
@@ -284,16 +285,16 @@ Resources:
         - !If [ cCreateTag4, {Key: !Ref pUserDefinedTagKey4, Value: !Ref pUserDefinedTagValue4}, !Ref AWS::NoValue ]
         - !If [ cCreateTag5, {Key: !Ref pUserDefinedTagKey5, Value: !Ref pUserDefinedTagValue5}, !Ref AWS::NoValue ]  
 
-  rGitHubOIDC:
-    Type: AWS::IAM::OIDCProvider
-    Condition: cCreateOIDCProvider
-    Properties:
-      Url: https://token.actions.githubusercontent.com
-      ClientIdList:
-        - sts.amazonaws.com
-        - !Sub https://github.com/${pGitHubOrg}/${pGitHubRepoName}
-      ThumbprintList: 
-        - !Ref pThumbprintList
+  # rGitHubOIDC:
+  #   Type: AWS::IAM::OIDCProvider
+  #   Condition: cCreateOIDCProvider
+  #   Properties:
+  #     Url: https://token.actions.githubusercontent.com
+  #     ClientIdList:
+  #       - sts.amazonaws.com
+  #       - !Sub https://github.com/${pGitHubOrg}/${pGitHubRepoName}
+  #     ThumbprintList: 
+  #       - !Ref pThumbprintList
 
 Outputs:
   oPipelineIAMRoleArn:
