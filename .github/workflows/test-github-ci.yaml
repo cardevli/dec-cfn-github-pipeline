@@ -47,12 +47,22 @@ jobs:
         uses: montudor/action-zip@v0.1.0
         with:
           args: zip -r ./artifacts/cardevli/dec-cfn-github-pipeline-2/custom-control-tower-configuration.zip . -i codes/cfct-modules
-      - name: Push ZIP to Dev S3
-        uses: jakejarvis/s3-sync-action@v0.3.1
-        env: 
-          SOURCE_DIR: './artifacts'
-          AWS_REGION: ${{ env.TARGET_REGION }}
-          AWS_S3_BUCKET: 'custom-control-tower-configuration-$AWS_CT_DEV_ACCOUNT-$TARGET_REGION'
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_CT_DEV_ACCOUNT }}:role/${{ env.GITHUB_PIPELINE_ROLE }}
+          role-session-name: cfct-dev-pipeline-session
+          aws-region: ${{ env.TARGET_REGION }}
+      - name:  Copy custom-control-tower-configuration.zip to dev s3
+        run: |
+          echo "Uploading customization zip to CT Dev S3 Bucket"
+          aws s3 cp .artifacts/cardevli/dec-cfn-github-pipeline-2/custom-control-tower-configuration.zip s3://custom-control-tower-configuration-$AWS_CT_DEV_ACCOUNT-$TARGET_REGION/custom-control-tower-configuration.zip
+      # - name: Push ZIP to Dev S3
+      #   uses: jakejarvis/s3-sync-action@v0.3.1
+      #   env: 
+      #     SOURCE_DIR: './artifacts'
+      #     AWS_REGION: ${{ env.TARGET_REGION }}
+      #     AWS_S3_BUCKET: 'custom-control-tower-configuration-$AWS_CT_DEV_ACCOUNT-$TARGET_REGION'
 
   # create_zip: 
   #   runs-on: ubuntu-latest
@@ -88,10 +98,6 @@ jobs:
   #       role-to-assume: arn:aws:iam::${{ env.AWS_CT_DEV_ACCOUNT }}:role/${{ env.GITHUB_PIPELINE_ROLE }}
   #       role-session-name: cfct-dev-pipeline-session
   #       aws-region: ${{ env.TARGET_REGION }}
-  #   - name: copy custom-control-tower-configuration zip to dev s3
-  #     run: |
-  #       echo "Uploading customization zip to CT Dev S3 Bucket"
-  #       aws s3 cp downloads/custom-control-tower-configuration.zip s3://custom-control-tower-configuration-$AWS_CT_DEV_ACCOUNT-$TARGET_REGION/custom-control-tower-configuration.zip
     # - name:  Copy custom-control-tower-configuration.zip to dev s3
     #   run: |
     #     echo "Uploading customization zip to CT Dev S3 Bucket"
