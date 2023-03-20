@@ -13,6 +13,7 @@ env:
   # AWS_CT_PROD_ACCOUNT: '1111111111'
   GITHUB_PIPELINE_ROLE: github-cfct-pipeline-role
   CFCT_CUSTOMIZATIONS_PATH: codes/cfct-modules
+  GITHUB_REPO_NAME: cardevli/dec-cfn-github-pipeline-2
 
 permissions:
   id-token: write
@@ -35,57 +36,62 @@ jobs:
     - name: Validate code with cfn-nag
       uses: stelligent/cfn_nag@master
       with:
-        input_path: ${{ env.CFCT_CUSTOMIZATIONS_PATH }}/*     
+        input_path: ${{ env.CFCT_CUSTOMIZATIONS_PATH }}/*    
 
-  create_zip: 
+  create_zip_upload_to_dev_s3:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - run: |
-        cd $CFCT_CUSTOMIZATIONS_PATH
-        zip -r custom-control-tower-configuration.zip *
-    - name: Create temp directory
-      run: mkdir downloads
-    - name: add artifact to publish to temp folder
-      run: |
-        cd downloads
-        echo 'custom-control-tower-configuration.zip' > custom-control-tower-configuration.zip
-    - name: upload artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: custom-control-tower-configuration.zip
-        path: downloads
-    # - name: Create cfct configuration artifact
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: custom-control-tower-configuration.zip
-    #     path: ${{ env.CFCT_CUSTOMIZATIONS_PATH }}/custom-control-tower-configuration.zip
-    # - name: Download cfct configuration artifact to specific repo
-    #   uses: actions/download-artifact@v3
-    #   with:
-    #     name: custom-control-tower-configuration.zip
-    #     path: ${{ env.CFCT_CUSTOMIZATIONS_PATH }}
-    # - name: Display structure of downloaded files
-    #   run: ls -R
-    #   working-directory: ${{ env.CFCT_CUSTOMIZATIONS_PATH }}
+      - name: Make artifact directory
+        run: mkdir -p ./artifacts/${{ github.repository }}
+      - name: Create ZIP file
+        uses: montudor/action-zip@v0.1.0
+        with:
+          args: zip -r ./artifacts/${{ github.repository }}/${{ github.sha }}.zip ${{ env.CFCT_CUSTOMIZATIONS_PATH }}
+      - name: Push ZIP to Dev S3
+        uses: jake-jarvis/s3-sync-action@v0.3.1
+        env: 
+          SOURCE_DIR: './artifacts'
+          AWS_REGION: ${{ env.TARGET_REGION }}
+          AWS_S3_BUCKET: 'custom-control-tower-configuration-$AWS_CT_DEV_ACCOUNT-$TARGET_REGION'
+          
+  # create_zip: 
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #   - run: |
+  #       cd $CFCT_CUSTOMIZATIONS_PATH
+  #       zip -r custom-control-tower-configuration.zip *
+  #   - name: Create cfct configuration artifact
+  #     uses: actions/upload-artifact@v3
+  #     with:
+  #       name: custom-control-tower-configuration.zip
+  #       path: ${{ env.CFCT_CUSTOMIZATIONS_PATH }}/custom-control-tower-configuration.zip
+  #   - name: Download cfct configuration artifact to specific repo
+  #     uses: actions/download-artifact@v3
+  #     with:
+  #       name: custom-control-tower-configuration.zip
+  #       path: ${{ env.CFCT_CUSTOMIZATIONS_PATH }}
+  #   - name: Display structure of downloaded files
+  #     run: ls -R
+  #     working-directory: ${{ env.CFCT_CUSTOMIZATIONS_PATH }}
 
-  upload_to_dev_s3:
-    needs: create_zip
-    runs-on: ubuntu-latest
-    if: github.ref_name == 'development'
-    steps:
-    - name: Git clone the repository
-      uses: actions/checkout@v3
-    - name: configure aws credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        role-to-assume: arn:aws:iam::${{ env.AWS_CT_DEV_ACCOUNT }}:role/${{ env.GITHUB_PIPELINE_ROLE }}
-        role-session-name: cfct-dev-pipeline-session
-        aws-region: ${{ env.TARGET_REGION }}
-    - name: copy custom-control-tower-configuration zip to dev s3
-      run: |
-        echo "Uploading customization zip to CT Dev S3 Bucket"
-        aws s3 cp downloads/custom-control-tower-configuration.zip s3://custom-control-tower-configuration-$AWS_CT_DEV_ACCOUNT-$TARGET_REGION/custom-control-tower-configuration.zip
+  # upload_to_dev_s3:
+  #   needs: create_zip
+  #   runs-on: ubuntu-latest
+  #   if: github.ref_name == 'development'
+  #   steps:
+  #   - name: Git clone the repository
+  #     uses: actions/checkout@v3
+  #   - name: configure aws credentials
+  #     uses: aws-actions/configure-aws-credentials@v1
+  #     with:
+  #       role-to-assume: arn:aws:iam::${{ env.AWS_CT_DEV_ACCOUNT }}:role/${{ env.GITHUB_PIPELINE_ROLE }}
+  #       role-session-name: cfct-dev-pipeline-session
+  #       aws-region: ${{ env.TARGET_REGION }}
+  #   - name: copy custom-control-tower-configuration zip to dev s3
+  #     run: |
+  #       echo "Uploading customization zip to CT Dev S3 Bucket"
+  #       aws s3 cp downloads/custom-control-tower-configuration.zip s3://custom-control-tower-configuration-$AWS_CT_DEV_ACCOUNT-$TARGET_REGION/custom-control-tower-configuration.zip
     # - name:  Copy custom-control-tower-configuration.zip to dev s3
     #   run: |
     #     echo "Uploading customization zip to CT Dev S3 Bucket"
