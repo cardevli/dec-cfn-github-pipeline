@@ -1,6 +1,6 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
-# Version 1.0.1
+# Version 1.0.0
 ---
 AWSTemplateFormatVersion: '2010-09-09'
 Description: 'AWS CloudFormation template to create IAM service account to use in GitHub pipeline to upload CFCT config'
@@ -11,14 +11,11 @@ Metadata:
       - Label: # GitHub Configurations
           default: "Configurations for GitHub access"
         Parameters: 
+          - pCfCTAccountId
           - pCfCTConfigBucket
           - pGitHubCredentialsIAMRole
           - pGitHubOrg
           - pGitHubRepoName
-          - pOIDCProviderArn
-          # - pOIDCAudience
-          # - pThumbprintList
-
       - Label: # tag 1
           default: "(Optional) Key/Value Pair for Tag 1"
         Parameters:
@@ -73,6 +70,12 @@ Metadata:
 
 
 Parameters:
+  pCfCTAccountId:
+    Type: String
+    Description: Control Tower management account ID
+    AllowedPattern: "^[0-9a-z+=,.@_-]{0,128}$"
+    ConstraintDescription: Control Tower management account ID must be 12 digits
+    Default: "928700945928"
   # Parameter for name of CFCT configuration bucket
   pCfCTConfigBucket:
     Type: String
@@ -85,7 +88,7 @@ Parameters:
   pGitHubCredentialsIAMRole:
     Type: String
     Description: Role name for pipeline IAM role
-    AllowedPattern: "^[0-9a-z+=,.@_-]{0,128}$"
+    AllowedPattern: "^[0-9a-zA-Z+=,.@_-]{0,128}$"
     ConstraintDescription: Name of role must be unique within the account and must be alphanumeric, including the following specific special characters +=,.@_-
     Default: "github-cfct-pipeline-role"
   
@@ -93,7 +96,7 @@ Parameters:
   pGitHubOrg:
     Type: String
     Description: Name of the GitHub Organization
-    AllowedPattern: "^[0-9a-z+=,.@_-]{0,128}$"
+    AllowedPattern: "^[0-9a-zA-Z+=,.@_-]{0,128}$"
     ConstraintDescription: Name of GitHub Organization must be unique within the account and must be alphanumeric, including the following specific special characters +=,.@_-
     Default: "cardevli"
 
@@ -103,33 +106,8 @@ Parameters:
     Description: Name of the GitHub repository
     AllowedPattern: "^[0-9a-zA-Z+=/,.@_-]{0,128}$"
     ConstraintDescription: Name of GitHub repository must be unique within the account and must be alphanumeric, including the following specific special characters +=,.@_-
-    Default: dec-cfn-github-pipeline-2
+    Default: "dec-cfn-github-pipeline-2"
 
-  # Parameter for the OIDC Provider ARN
-  pOIDCProviderArn:
-    Type: String
-    Description: ARN for the GitHub OIDC Provider
-    # AllowedPattern: "^arn:aws:iam:[a-z]{2}-[a-z]+-\\d{1}:\\d{12}:oidc-provider\\/[a-zA-Z0-9/+=._-]+$|^$"
-    # ConstraintDescription: The OIDC Provider ARN must be unique within the account and must be alphanumeric, including the following specific special characters +=,.@_-
-    Default: "arn:aws:iam::928700945928:oidc-provider/token.actions.githubusercontent.com"
-  
-  # Parameter for the name of the audience supplied to configure-aws-credentials
-  # pOIDCAudience:
-  #   Type: String
-  #   Description: The audience supplied to configure-aws-credentials
-  #   AllowedPattern: "^[0-9a-z+=,.@_-]{0,128}$"
-  #   ConstraintDescription: The OIDC Audience must be unique within the account and must be alphanumeric, including the following specific special characters +=,.@_-
-  #   Default: "sts.amazon.aws.com"
-
-  # Parameter for thumbprint of an Open ID Connector which is a SHA1 hash of the public certficate of the host
-  # pThumbprintList:
-  #   Type: String
-  #   Description: A thumbprint of an Open ID Connector is a SHA1 hash of the public certificate of the host
-  #   AllowedPattern: "^[0-9a-z+=,.@_-]{0,128}$"
-  #   ConstraintDescription: The thumbprint list must be unique within the account and must be alphanumeric, including the following specific special characters +=,.@_-
-  #   Default: ""
-    # Default: "6938fd4d98bab03faadb97b34396831e3780aea1"
-  
   # optional parameters for tags
   # parameter for Tag 1 Key
   pUserDefinedTagKey1: 
@@ -202,10 +180,6 @@ Parameters:
     ConstraintDescription: Must match the allowable values for a Tag Value. This can only contain alphanumeric characters or special characters _.:/=+-@ up to 256 characters
   
 Conditions:
-  # cCreateOIDCProvider: !Equals
-  #   - !Ref pOIDCProviderArn
-  #   - ""
-
   # conditions to control creation of user-defined tags
   # conditons to control creation of tag 1
   cCreateTag1: !And
@@ -237,6 +211,17 @@ Resources:
   # Creates IAM role for service account to use in GitHub pipeline to upload CFCT config via inline policy
   rPipelineIAMRole:
     Type: AWS::IAM::Role
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+        - id: W11
+          reason: "Wildcard necessary to allow IAM role to use any KMS key selected for S3 encryption"
+        - id: W28
+          reason: "Resource name dependent on 'pGitHubCredentialsIAMRole' which can be changed" 
+      checkov:
+        skip:
+          - id: "CKV_AWS_111"
+            comment: "Write access is constrained by Resource to 'pCfCTConfigBucket'"
     Properties:
       RoleName: !Ref pGitHubCredentialsIAMRole
       AssumeRolePolicyDocument:
@@ -245,14 +230,10 @@ Resources:
             Action: sts:AssumeRoleWithWebIdentity
             Principal: 
               Federated: 
-                # - cCreateOIDCProvider
-                # - !Ref rGitHubOIDC
-                - !Ref pOIDCProviderArn
+                - !Sub "arn:${AWS::Partition}:iam::${pCfCTAccountId}:oidc-provider/token.actions.githubusercontent.com"
             Condition:
               StringLike: 
                 token.actions.githubusercontent.com:sub: !Sub "repo:${pGitHubOrg}/${pGitHubRepoName}:*"
-              #   token.actions.githubusercontent.com:aud: !Ref pOIDCAudience
-              #   token.actions.githubusercontent.com:iss: "https://token.actions.githubusercontent.com"
       Policies:
         - PolicyName: s3-kms-permissions
           PolicyDocument:
@@ -272,12 +253,12 @@ Resources:
                 - 'kms:GenerateDataKey'
                 - 'kms:Encrypt'
                 - 'kms:Decrypt'
-              Resource: "*" # Wildcard allows IAM User to use any KMS key selected for S3 encryption
+              Resource: "*" # Wildcard allows IAM Role to use any KMS key selected for S3 encryption
             - Effect: Allow
               Action: sts:AssumeRoleWithWebIdentity
-              Resource: "arn:aws:iam::928700945928:role/*"
-      ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+              Resource: !Sub "arn:${AWS::Partition}:iam::${pCfCTAccountId}:role/*"
+      # ManagedPolicyArns:
+      #   - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
       Tags: # conditionally apply tags to resources based on user-defined tag keys 
         - !If [ cCreateTag1, {Key: !Ref pUserDefinedTagKey1, Value: !Ref pUserDefinedTagValue1}, !Ref AWS::NoValue ]
         - !If [ cCreateTag2, {Key: !Ref pUserDefinedTagKey2, Value: !Ref pUserDefinedTagValue2}, !Ref AWS::NoValue ]
@@ -285,19 +266,7 @@ Resources:
         - !If [ cCreateTag4, {Key: !Ref pUserDefinedTagKey4, Value: !Ref pUserDefinedTagValue4}, !Ref AWS::NoValue ]
         - !If [ cCreateTag5, {Key: !Ref pUserDefinedTagKey5, Value: !Ref pUserDefinedTagValue5}, !Ref AWS::NoValue ]  
 
-  # rGitHubOIDC:
-  #   Type: AWS::IAM::OIDCProvider
-  #   Condition: cCreateOIDCProvider
-  #   Properties:
-  #     Url: https://token.actions.githubusercontent.com
-  #     ClientIdList:
-  #       - sts.amazonaws.com
-  #       - !Sub https://github.com/${pGitHubOrg}/${pGitHubRepoName}
-  #     ThumbprintList: 
-  #       - !Ref pThumbprintList
-
 Outputs:
   oPipelineIAMRoleArn:
-    # Condition: cCreateOIDCProvider
     Description: AWS Arn of the IAM role for GitHub
     Value: !GetAtt rPipelineIAMRole.Arn
