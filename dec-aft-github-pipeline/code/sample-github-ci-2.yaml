@@ -1,0 +1,66 @@
+name: Deploy AFT via GitHub Pipeline
+# test7
+
+on:
+  push:
+    branches:
+      - development
+      - production
+
+env:
+  TARGET_REGION: "us-east-1"
+  GITHUB_PIPELINE_ROLE: "aft-pipeline-role"
+  AWS_AFT_DEV_ACCOUNT: "523099174411"
+  CI_COMMIT_AUTHOR: "cardevli@amazon.com"
+
+jobs:
+  to_code_commit:
+    runs-on: ubuntu-latest
+    if: github.ref_name == "development"
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      REPO_NAME: aft-account-request
+      WORK_DIR: code/aft-account-request
+      CI_COMMIT_MESSAGE: "my latest commit"
+    steps:
+      - name: Checkout
+        uses: action/checkout@v3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-region: ${{ env.TARGET_REGION }}
+          role-to-assume: arn:aws:iam::${{ env.AWS_AFT_DEV_ACCOUNT }}:role/${{ env.GITHUB_PIPELINE_ROLE }}
+          role-session-name: myGitHubActions
+      - name: Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: code/aft-account-request
+          framework: terraform
+          quiet: true
+          output_format: sarif
+          output_file_path: code_review/checkov-results.sarif
+      - name: git-remote-codecommit
+        uses: actions/github-script@v6
+        with:
+          script: |
+            yum update -q -y
+            yum install git python3 python3-pip -y -q
+            python3 -m pip install -U git-remote-codecommit > /dev/null 2>&1
+            COMMIT_USER_EMAIL=$(echo $CI_COMMIT_AUTHOR | awk -v RS="[<>]" '/@/')
+            COMMIT_USER_NAME=$(echo $CI_COMMIT_AUTHOR | awk -F'<' '{print $1}')
+            git config --global user.email $COMMIT_USER_EMAIL
+            git config --global user.name $COMMIT_USER_NAME
+      - name: Clone aft-account-request
+        uses: actions/github-script@v6
+        with:
+          script: |
+            git clone codecommit::$TARGET_REGION://$REPO_NAME
+            rm -rf $REPO_NAME/*
+            mv -v $WORK_DIR/* $REPO_NAME
+            cd $REPO_NAME
+            git checkout main > /dev/null 2>&1 || git checkout -b main
+            git add .
+            git commit -m "$CI_COMMIT_MESSAGE"
+            git push -u origin main

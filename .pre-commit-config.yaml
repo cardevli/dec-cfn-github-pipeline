@@ -1,0 +1,53 @@
+repos:
+  - repo: git://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
+    hooks:
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: detect-private-key
+      - id: pretty-format-json
+        args:
+          - --autofix
+      - id: trailing-whitespace
+
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.77.0
+    hooks:
+      - id: terraform_docs
+      - id: terraform_fmt
+      - id: terraform_tfsec
+      - id: terraform_providers_lock
+      - id: terraform_tflint
+      - id: terraform_validate
+        exclude: deploy
+      - id: tfupdate
+        name: Autoupdate aws provider versions
+        args:
+          - --args=provider aws
+          - --args=--version 4.52.0
+      - id: tfupdate
+        name: Autoupdate template provider versions
+        args:
+          - --args=provider template
+          - --args=--version 2.2.0
+      - id: tfupdate
+        name: Autoupdate null provider versions
+        args:
+          - --args=provider null
+          - --args=--version 3.2.1
+      - id: tfupdate
+        name: Autoupdate random provider versions
+        args:
+          - --args=provider random
+          - --args=--version 3.4.3
+      - id: tfupdate
+        name: Autoupdate http provider versions
+        args:
+          - --args=provider http
+          - --args=--version 3.2.1
+      - id: tfupdate
+        name: Autoupdate local provider versions
+        args:
+          - --args=provider local
+          - --args=--version 2.3.0

@@ -1,0 +1,35 @@
+stages:
+  - validate
+
+before_script:
+  - apt-get update -qy
+  - apt-get -y install zip unzip
+
+variables:
+  TARGET_REGION: us-west-2
+  DEV_CT_CUSTOMIZATION_S3_BUCKET: 
+  PROD_CT_CUSTOMIZATION_S3_BUCKET: 
+
+### Stages ###
+validate:
+  stage: validate
+  image: "ruby:latest"
+  script:
+    - apt install -y software-properties-common > /dev/null 2>&1
+    - add-apt-repository ppa:deadsnakes/ppa > /dev/null 2>&1
+    - apt install -y python3.9 > /dev/null 2>&1
+    - apt install -y python3-pip > /dev/null 2>&1
+    - apt install -y nodejs > /dev/null 2>&1
+    - apt-get install -y npm > /dev/null 2>&1
+    - python3.9 -m pip install --upgrade pip > /dev/null 2>&1
+    - echo "Installing checkov" 
+    - python3.9 -m pip install -U checkov > /dev/null 2>&1
+    - echo "Installing safety"
+    - python3.9 -m pip install -U safety > /dev/null 2>&1
+    - echo "Installing cfn_nag"
+    - gem install cfn-nag > /dev/null 2>&1
+    - echo "Performing cfn_nag_scan on $TEMPLATE_PATH..."
+    - cfn_nag_scan --input-path code/* -g
+    - checkov --directory code/
+    - npm install -g retire
+    - retire
